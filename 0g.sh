@@ -217,7 +217,7 @@ function install_storage_node() {
 
 
     # 克隆仓库
-    git clone -b v0.4.2 https://github.com/0glabs/0g-storage-node.git
+    git clone -b v0.4.4 https://github.com/0glabs/0g-storage-node.git
 
     # 进入对应目录构建
     cd 0g-storage-node
@@ -240,7 +240,9 @@ function install_storage_node() {
 
     # 启动
     cd ~/0g-storage-node/run
-    screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
+    start="while true; do $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml; echo '进程异常退出，等待重启60s' >&2; sleep 60; done"
+    screen -dmS zgs_node_session bash -c "$start"
+    #screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
 
 
     echo '====================== 安装完成，使用 screen -ls 命令查询即可 ==========================='
@@ -315,7 +317,9 @@ function restart_storage() {
     screen -S zgs_node_session -X quit
     # 启动
     cd ~/0g-storage-node/run
-    screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
+    start="while true; do $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml; echo '进程异常退出，等待重启60s' >&2; sleep 60; done"
+    screen -dmS zgs_node_session bash -c "$start"
+    #screen -dmS zgs_node_session $HOME/0g-storage-node/target/release/zgs_node --config $HOME/0g-storage-node/run/config-testnet-turbo.toml
     echo '====================== 启动成功，请通过screen -r zgs_node_session 查询 ==========================='
 
 }
@@ -416,11 +420,9 @@ function update_script() {
 function main_menu() {
     while true; do
         clear
-        echo "脚本以及教程由推特用户大赌哥 @y95277777 编写，群友@rainy242869 维护更新,免费开源，请勿相信收费"
+        echo "脚本以及教程由推特用户大赌哥 @y95277777 编写，Chanway客制化更新"
         echo "=======================0GAI节点安装================================"
         echo "=======================验证节点功能================================"
-        echo "节点社区 Telegram 群组:https://t.me/niuwuriji"
-        echo "节点社区 Discord 社群:https://discord.gg/GbMV5EcNWF"
         echo "退出脚本，请按键盘ctrl c退出即可"
         echo "请选择要执行的操作:"
         echo "1. 安装节点"
