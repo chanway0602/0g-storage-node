@@ -399,8 +399,8 @@ function uninstall_storage_node() {
 }
 
 function update_script() {
-    SCRIPT_PATH="./0g.sh"  # 定义脚本路径
-    SCRIPT_URL="https://raw.githubusercontent.com/a3165458/0g.ai/main/0g.sh"
+    SCRIPT_PATH="./0g-chanway.sh"  # 定义脚本路径
+    SCRIPT_URL="https://raw.githubusercontent.com/chanway0602/0g.ai/main/0g-chanway.sh"
 
     # 备份原始脚本
     cp $SCRIPT_PATH "${SCRIPT_PATH}.bak"
