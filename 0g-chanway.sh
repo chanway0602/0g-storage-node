@@ -400,7 +400,7 @@ function uninstall_storage_node() {
 
 function update_script() {
     SCRIPT_PATH="./0g-chanway.sh"  # 定义脚本路径
-    SCRIPT_URL="https://raw.githubusercontent.com/chanway0602/0g.ai/main/0g-chanway.sh"
+    SCRIPT_URL="https://raw.githubusercontent.com/chanway0602/0g-storage-node/main/0g-chanway.sh"
 
     # 备份原始脚本
     cp $SCRIPT_PATH "${SCRIPT_PATH}.bak"
