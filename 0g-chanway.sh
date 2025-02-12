@@ -7,6 +7,16 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+    # 配置 0gchaind 环境变量
+    if [ -z "$MONIKER" ]; then
+        echo 'export MONIKER="My_Node"' >> $HOME/.bashrc
+    fi
+
+    if [ -z "$wallet_name" ]; then
+        echo 'export wallet_name="wallet"' >> $HOME/.bashrc
+    fi
+    source $HOME/.bashrc
+
 # 检查并安装 Node.js 和 npm
 function install_nodejs_and_npm() {
     if command -v node > /dev/null 2>&1; then
@@ -74,11 +84,7 @@ function install_validator() {
     wget -O 0gchaind https://github.com/0glabs/0g-chain/releases/download/v0.5.0/0gchaind-linux-v0.5.0
     chmod +x $HOME/0gchaind
     mv $HOME/0gchaind /usr/local/go/bin
-    source ~/.bashrc
-
-    # 配置0gchaind
-    export MONIKER="My_Node"
-    export WALLET_NAME="wallet"
+    source $HOME/.bashrc
 
     # 初始化节点
     cd $HOME
@@ -121,7 +127,7 @@ function install_validator() {
     pm2 start 0gchaind -- start --log_output_console --home ~/.0gchain && pm2 save && pm2 startup
     pm2 restart 0gchaind
 
-    echo '====================== 安装完成,请退出脚本后执行 source $HOME/.bash_profile 以加载环境变量==========================='
+    echo '====================== 安装完成,请退出脚本后执行 source $HOME/.bashrc 以加载环境变量==========================='
 
 }
 
@@ -155,13 +161,13 @@ function uninstall_validator() {
 
 # 创建钱包
 function add_wallet() {
-    read -p "请输入你想设置的钱包名称: " wallet_name
+    #read -p "请输入你想设置的钱包名称: " wallet_name
     0gchaind keys add $wallet_name --eth
 }
 
 # 导入钱包
 function import_wallet() {
-    read -p "请输入你想设置的钱包名称: " wallet_name
+    #read -p "请输入你想设置的钱包名称: " wallet_name
     0gchaind keys add $wallet_name --recover --eth
 }
 
@@ -180,7 +186,7 @@ function check_sync_status() {
 # 创建验证者
 function add_validator() {
 
-    read -p "请输入您的钱包名称: " wallet_name
+    #read -p "请输入您的钱包名称: " wallet_name
     read -p "请输入您想设置的验证者的名字: " validator_name
     read -p "请输入您的验证者详情（例如'吊毛资本'）: " details
 
@@ -204,9 +210,10 @@ function add_validator() {
 
 # 给自己地址验证者质押
 function delegate_self_validator() {
-    read -p "请输入质押代币数量(单位为ua0gai,比如你有1000000个ua0gai，留点水给自己，输入900000回车就行): " math
-    read -p "请输入钱包名称: " wallet_name
-    0gchaind tx staking delegate $(0gchaind keys show $wallet_name --bech val -a) ${math}ua0gi --from $wallet_name   --gas=auto --gas-adjustment=1.4 -y
+    #read -p "请输入质押代币数量(单位为ua0gai,比如你有1000000个ua0gai，留点水给自己，输入900000回车就行): " math
+    #read -p "请输入钱包名称: " wallet_name
+    #0gchaind tx staking delegate $(0gchaind keys show $wallet_name --bech val -a) ${math}ua0gi --from $wallet_name   --gas=auto --gas-adjustment=1.4 -y
+    0gchaind tx staking delegate $(0gchaind keys show $wallet_name --bech val -a) 1000000ua0gi --from $wallet_name --chain-id zgtendermint_16600-2 --gas=auto --gas-adjustment=1.6 --gas-prices 0.00252ua0gi -y 
 
 }
 
@@ -325,7 +332,7 @@ function uninstall_storage_node() {
 
 # 转换 ETH 地址
 function transfer_EIP() {
-    read -p "请输入你的钱包名称: " wallet_name
+    #read -p "请输入你的钱包名称: " wallet_name
     echo "0x$(0gchaind debug addr $(0gchaind keys show $wallet_name -a) | grep hex | awk '{print $3}')"
 
 }
@@ -358,36 +365,36 @@ function update_script() {
 }
 
 function check_validator_height() {
-	rpc_port=$(grep -m 1 -oP '^laddr = "\K[^"]+' "$HOME/.0gchain/config/config.toml" | cut -d ':' -f 3)
+    rpc_port=$(grep -m 1 -oP '^laddr = "\K[^"]+' "$HOME/.0gchain/config/config.toml" | cut -d ':' -f 3)
 
-	local_height=$(curl -s localhost:$rpc_port/status | jq -r '.result.sync_info.latest_block_height')
-	network_height=$(curl -s https://og-testnet-rpc.itrocket.net/status | jq -r '.result.sync_info.latest_block_height')
+    local_height=$(curl -s localhost:$rpc_port/status | jq -r '.result.sync_info.latest_block_height')
+    network_height=$(curl -s https://og-testnet-rpc.itrocket.net/status | jq -r '.result.sync_info.latest_block_height')
 
-	if ! [[ "$local_height" =~ ^[0-9]+$ ]] || ! [[ "$network_height" =~ ^[0-9]+$ ]]; then
-	echo -e "\033[1;31mError: Invalid block height data. Retrying...\033[0m"
-	sleep 5
-	continue
-	fi
+    if ! [[ "$local_height" =~ ^[0-9]+$ ]] || ! [[ "$network_height" =~ ^[0-9]+$ ]]; then
+    echo -e "\033[1;31mError: Invalid block height data. Retrying...\033[0m"
+    sleep 5
+    continue
+    fi
 
-	blocks_left=$((network_height - local_height))
-	if [ "$blocks_left" -lt 0 ]; then
-	blocks_left=0
-	fi
+    blocks_left=$((network_height - local_height))
+    if [ "$blocks_left" -lt 0 ]; then
+    blocks_left=0
+    fi
 
-	echo -e "\033[1;33mNode Height:\033[1;34m $local_height\033[0m \033[1;33m| Network Height:\033[1;36m $network_height\033[0m \033[1;33m| Blocks Left:\033[1;31m $blocks_left\033[0m"
+    echo -e "\033[1;33mNode Height:\033[1;34m $local_height\033[0m \033[1;33m| Network Height:\033[1;36m $network_height\033[0m \033[1;33m| Blocks Left:\033[1;31m $blocks_left\033[0m"
 }
 
 function check_storage_height() {
-	request=$(curl -s -X POST http://localhost:5678 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"zgs_getStatus","params":[],"id":1}')
-	local_height=$(echo $request | jq -r '.result.logSyncHeight')
-	connectedPeers=$(echo $request | jq -r '.result.connectedPeers')
-	network_height=$(curl -s https://0grpc.tech-coha05.xyz/status | jq -r .result.sync_info.latest_block_height)
-	blocks_left=$((network_height - local_height))
-	
-	echo "connectedPeers: $connectedPeers"
-	echo "Your node height: $local_height"
-	echo "Network height: $network_height"
-	echo "Blocks left: $blocks_left"
+    request=$(curl -s -X POST http://localhost:5678 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"zgs_getStatus","params":[],"id":1}')
+    local_height=$(echo $request | jq -r '.result.logSyncHeight')
+    connectedPeers=$(echo $request | jq -r '.result.connectedPeers')
+    network_height=$(curl -s https://0grpc.tech-coha05.xyz/status | jq -r .result.sync_info.latest_block_height)
+    blocks_left=$((network_height - local_height))
+    
+    echo "connectedPeers: $connectedPeers"
+    echo "Your node height: $local_height"
+    echo "Network height: $network_height"
+    echo "Blocks left: $blocks_left"
 }
 
 # 主菜单
@@ -423,10 +430,10 @@ function main_menu() {
         echo "19. 备份验证者私钥"
         echo "======================================================="
         echo "20. 更新本脚本"
-		echo "=======================查看节点高度================================"
-		echo "21. 查看验证者节点高度"
-		echo "22. 查看存储节点高度"
-        read -p "请输入选项（1-21）: " OPTION
+        echo "=======================查看节点高度================================"
+        echo "21. 查看验证者节点高度"
+        echo "22. 查看存储节点高度"
+        read -p "请输入选项（1-22）: " OPTION
 
         case $OPTION in
         1) install_validator ;;
