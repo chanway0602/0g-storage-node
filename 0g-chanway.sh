@@ -9,13 +9,14 @@ fi
 
     # 配置 0gchaind 环境变量
     if [ -z "$MONIKER" ]; then
-        echo 'export MONIKER="My_Node"' >> $HOME/.bashrc
+        echo 'export MONIKER="My_Node"' >> $HOME/.profile
     fi
 
     if [ -z "$wallet_name" ]; then
-        echo 'export wallet_name="wallet"' >> $HOME/.bashrc
+        echo 'export wallet_name="wallet"' >> $HOME/.profile
     fi
-    source $HOME/.bashrc
+    
+    source $HOME/.profile
 
 # 检查并安装 Node.js 和 npm
 function install_nodejs_and_npm() {
@@ -84,7 +85,7 @@ function install_validator() {
     wget -O 0gchaind https://github.com/0glabs/0g-chain/releases/download/v0.5.0/0gchaind-linux-v0.5.0
     chmod +x $HOME/0gchaind
     mv $HOME/0gchaind /usr/local/go/bin
-    source $HOME/.bashrc
+    source $HOME/.profile
 
     # 初始化节点
     cd $HOME
@@ -115,7 +116,7 @@ function install_validator() {
     # 配置端口
     sed -i -e "s%^proxy_app = \"tcp://127.0.0.1:26658\"%proxy_app = \"tcp://127.0.0.1:13458\"%; s%^laddr = \"tcp://127.0.0.1:26657\"%laddr = \"tcp://127.0.0.1:13457\"%; s%^pprof_laddr = \"localhost:6060\"%pprof_laddr = \"localhost:13460\"%; s%^laddr = \"tcp://0.0.0.0:26656\"%laddr = \"tcp://0.0.0.0:13456\"%; s%^prometheus_listen_addr = \":26660\"%prometheus_listen_addr = \":13466\"%" $HOME/.0gchain/config/config.toml
     sed -i -e "s%^address = \"tcp://localhost:1317\"%address = \"tcp://0.0.0.0:13417\"%; s%^address = \":8080\"%address = \":13480\"%; s%^address = \"0.0.0.0:9090\"%address = \"0.0.0.0:13490\"%; s%^address = \"localhost:9091\"%address = \"0.0.0.0:13491\"%; s%:8545%:13445%; s%:8546%:13446%; s%:6065%:13465%" $HOME/.0gchain/config/app.toml
-    source $HOME/.bashrc
+    source $HOME/.profile
 
     # 下载快照
     cp $HOME/.0gchain/data/priv_validator_state.json $HOME/.0gchain/priv_validator_state.json.backup
@@ -127,7 +128,7 @@ function install_validator() {
     pm2 start 0gchaind -- start --log_output_console --home ~/.0gchain && pm2 save && pm2 startup
     pm2 restart 0gchaind
 
-    echo '====================== 安装完成,请退出脚本后执行 source $HOME/.bashrc 以加载环境变量==========================='
+    echo '====================== 安装完成,请退出脚本后执行 source $HOME/.profile 以加载环境变量==========================='
 
 }
 
