@@ -73,8 +73,8 @@ function install_validator() {
     # 下载二进制文件
     wget -O 0gchaind https://github.com/0glabs/0g-chain/releases/download/v0.5.0/0gchaind-linux-v0.5.0
     chmod +x $HOME/0gchaind
-    mv $HOME/0gchaind $HOME/go/bin
-    source ~/.profile
+    mv $HOME/0gchaind /usr/local/go/bin
+    source ~/.bashrc
 
     # 配置0gchaind
     export MONIKER="My_Node"
@@ -109,7 +109,7 @@ function install_validator() {
     # 配置端口
     sed -i -e "s%^proxy_app = \"tcp://127.0.0.1:26658\"%proxy_app = \"tcp://127.0.0.1:13458\"%; s%^laddr = \"tcp://127.0.0.1:26657\"%laddr = \"tcp://127.0.0.1:13457\"%; s%^pprof_laddr = \"localhost:6060\"%pprof_laddr = \"localhost:13460\"%; s%^laddr = \"tcp://0.0.0.0:26656\"%laddr = \"tcp://0.0.0.0:13456\"%; s%^prometheus_listen_addr = \":26660\"%prometheus_listen_addr = \":13466\"%" $HOME/.0gchain/config/config.toml
     sed -i -e "s%^address = \"tcp://localhost:1317\"%address = \"tcp://0.0.0.0:13417\"%; s%^address = \":8080\"%address = \":13480\"%; s%^address = \"0.0.0.0:9090\"%address = \"0.0.0.0:13490\"%; s%^address = \"localhost:9091\"%address = \"0.0.0.0:13491\"%; s%:8545%:13445%; s%:8546%:13446%; s%:6065%:13465%" $HOME/.0gchain/config/app.toml
-    source $HOME/.bash_profile
+    source $HOME/.bashrc
 
     # 下载快照
     cp $HOME/.0gchain/data/priv_validator_state.json $HOME/.0gchain/priv_validator_state.json.backup
@@ -357,6 +357,39 @@ function update_script() {
 
 }
 
+function check_validator_height() {
+	rpc_port=$(grep -m 1 -oP '^laddr = "\K[^"]+' "$HOME/.0gchain/config/config.toml" | cut -d ':' -f 3)
+
+	local_height=$(curl -s localhost:$rpc_port/status | jq -r '.result.sync_info.latest_block_height')
+	network_height=$(curl -s https://og-testnet-rpc.itrocket.net/status | jq -r '.result.sync_info.latest_block_height')
+
+	if ! [[ "$local_height" =~ ^[0-9]+$ ]] || ! [[ "$network_height" =~ ^[0-9]+$ ]]; then
+	echo -e "\033[1;31mError: Invalid block height data. Retrying...\033[0m"
+	sleep 5
+	continue
+	fi
+
+	blocks_left=$((network_height - local_height))
+	if [ "$blocks_left" -lt 0 ]; then
+	blocks_left=0
+	fi
+
+	echo -e "\033[1;33mNode Height:\033[1;34m $local_height\033[0m \033[1;33m| Network Height:\033[1;36m $network_height\033[0m \033[1;33m| Blocks Left:\033[1;31m $blocks_left\033[0m"
+}
+
+function check_storage_height() {
+	request=$(curl -s -X POST http://localhost:5678 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"zgs_getStatus","params":[],"id":1}')
+	local_height=$(echo $request | jq -r '.result.logSyncHeight')
+	connectedPeers=$(echo $request | jq -r '.result.connectedPeers')
+	network_height=$(curl -s https://0grpc.tech-coha05.xyz/status | jq -r .result.sync_info.latest_block_height)
+	blocks_left=$((network_height - local_height))
+	
+	echo "connectedPeers: $connectedPeers"
+	echo "Your node height: $local_height"
+	echo "Network height: $network_height"
+	echo "Blocks left: $blocks_left"
+}
+
 # 主菜单
 function main_menu() {
     while true; do
@@ -390,6 +423,9 @@ function main_menu() {
         echo "19. 备份验证者私钥"
         echo "======================================================="
         echo "20. 更新本脚本"
+		echo "=======================查看节点高度================================"
+		echo "21. 查看验证者节点高度"
+		echo "22. 查看存储节点高度"
         read -p "请输入选项（1-21）: " OPTION
 
         case $OPTION in
@@ -413,6 +449,8 @@ function main_menu() {
         18) delete_storage_logs ;;
         19) export_priv_validator_key ;;
         20) update_script ;;
+        21) check_validator_height ;;
+        22) check_storage_height ;;
 
         *) echo "无效选项。" ;;
         esac
