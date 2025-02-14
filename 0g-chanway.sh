@@ -192,7 +192,7 @@ function add_validator() {
     read -p "请输入您的验证者详情（例如'吊毛资本'）: " details
     
     0gchaind tx staking create-validator \
-    --amount 1000000ua0gi \
+    --amount 100000ua0gi \
     --from $wallet_name \
     --commission-rate 0.1 \
     --commission-max-rate 0.2 \
