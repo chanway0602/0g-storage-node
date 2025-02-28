@@ -388,7 +388,7 @@ function check_storage_height() {
     request=$(curl -s -X POST http://localhost:5678 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"zgs_getStatus","params":[],"id":1}')
     local_height=$(echo $request | jq -r '.result.logSyncHeight')
     connectedPeers=$(echo $request | jq -r '.result.connectedPeers')
-    network_height=$(curl -s https://0grpc.tech-coha05.xyz/status | jq -r .result.sync_info.latest_block_height)
+    network_height=$(curl -s https://og-testnet-rpc.itrocket.net/status | jq -r .result.sync_info.latest_block_height)
     blocks_left=$((network_height - local_height))
     
     echo "connectedPeers: $connectedPeers"
