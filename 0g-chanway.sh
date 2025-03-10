@@ -397,6 +397,10 @@ function check_storage_height() {
     echo "Blocks left: $blocks_left"
 }
 
+function check_DA_logs() {
+    sudo journalctl -u 0gda -f -o cat
+}
+
 # 主菜单
 function main_menu() {
     while true; do
@@ -433,6 +437,7 @@ function main_menu() {
         echo "=======================查看节点高度================================"
         echo "21. 查看验证者节点高度"
         echo "22. 查看存储节点高度"
+        echo "23. 查看DA节点日志"
         read -p "请输入选项（1-22）: " OPTION
 
         case $OPTION in
@@ -458,6 +463,7 @@ function main_menu() {
         20) update_script ;;
         21) check_validator_height ;;
         22) check_storage_height ;;
+        23) check_DA_logs ;;
 
         *) echo "无效选项。" ;;
         esac
