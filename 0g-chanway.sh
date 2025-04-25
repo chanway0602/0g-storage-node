@@ -388,7 +388,7 @@ function check_storage_height() {
 RPC_URL=$(grep 'blockchain_rpc_endpoint' $HOME/0g-storage-node/run/config-testnet-turbo.toml | cut -d '"' -f2)
 
 cd $HOME/0g-storage-node
-VERSION=$(git describe --tags --abbrev=0 2>/dev/null)
+VERSION=$($HOME/0g-storage-node/target/release/zgs_node --version 2>/dev/null)
 if [[ -n "$VERSION" ]]; then
     echo -e "🧩 Storage Node Version: \e[1;32m$VERSION\e[0m"
 else
