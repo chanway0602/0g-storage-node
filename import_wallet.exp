@@ -1,0 +1,70 @@
+#!/usr/bin/expect
+set timeout 2
+#exp_internal 1
+
+# 设置输出文件
+log_file "output.log"
+
+# 禁用输出到终端
+#log_user 0
+
+set mnemonic_file "mnemonics.txt"
+set file [open $mnemonic_file r]
+
+while {[gets $file mnemonic] != -1} {
+    spawn 0gchaind keys add wallet --recover --eth
+
+    expect {
+        "Enter your bip39 mnemonic*" {
+            send "$mnemonic\r"
+            exp_continue
+        }
+
+        "Enter keyring passphrase*" {
+            send "00000000\r"
+        }
+
+        "Re-enter keyring passphrase*" {
+            send "00000000\r"
+        }
+
+    }
+
+    expect {
+        "Enter keyring passphrase*" { 
+            send "00000000\r"
+            exp_continue
+        }
+
+        "override the existing name wallet*" {
+            send "y\r"
+            exp_continue
+        }
+
+        "Enter your bip39 mnemonic*" {
+            send "$mnemonic\r"
+        }
+
+    }
+    expect eof
+
+    spawn 0gchaind keys show wallet --bech val -a
+    expect "Enter keyring passphrase*" {
+        send "00000000\r"
+        sleep 2
+    }
+    expect eof
+
+    spawn sh -c "echo \"0x\$(0gchaind debug addr \$(0gchaind keys show wallet -a) | grep hex | awk '{print \$3}')\""
+    expect "Enter keyring passphrase*" {
+        send "00000000\r"
+        sleep 2
+        send "==================================================================================================================================\r\r\r\r"
+        sleep 1
+    }
+    expect eof
+
+}
+
+close $file
+
